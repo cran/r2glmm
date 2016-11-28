@@ -2,7 +2,7 @@ Package: r2glmm
 Type: Package
 Title: Computes R Squared for Mixed (Multilevel) Models
 Date: 2016-09-14
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: person("Byron", "Jaeger", email = "byron.jaeger@gmail.com", role = c("aut", "cre"))
 Description: The model R squared and semi-partial R squared for the linear and
     generalized linear mixed model (LMM and GLMM) are computed with confidence
@@ -22,7 +22,7 @@ Description: The model R squared and semi-partial R squared for the linear and
     covariance model selection. Package installation instructions can be found
     in the readme file.
 Imports: mgcv, lmerTest, Matrix, pbkrtest, ggplot2, afex, stats, MASS,
-        dplyr
+        gridExtra, grid, data.table, dplyr
 Suggests: lme4, nlme, testthat
 License: GPL-2
 LazyData: TRUE
@@ -30,8 +30,8 @@ RoxygenNote: 5.0.1
 URL: https://github.com/bcjaeger/r2glmm
 BugReports: https://github.com/bcjaeger/r2glmm/issues
 NeedsCompilation: no
-Packaged: 2016-09-15 13:38:35 UTC; Byron
+Packaged: 2016-11-28 19:40:09 UTC; Byron
 Author: Byron Jaeger [aut, cre]
 Maintainer: Byron Jaeger <byron.jaeger@gmail.com>
 Repository: CRAN
-Date/Publication: 2016-09-15 16:16:53
+Date/Publication: 2016-11-28 22:10:47

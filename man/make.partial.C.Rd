@@ -24,5 +24,6 @@ Generate partial contrast matrices
 \examples{
 make.partial.C(4, 5, 2)
 make.partial.C(4, 5, 3)
+make.partial.C(4, 5, 2:4)
 }
 
