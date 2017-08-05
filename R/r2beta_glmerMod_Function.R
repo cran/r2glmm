@@ -3,7 +3,7 @@
 #' @export
 
 r2beta.glmerMod <- function(model, partial=TRUE, method='sgv',
-                            wtdbin = TRUE, data = NULL){
+                            data = NULL){
 
   if(is.null(data)) data = model@frame
 
@@ -43,28 +43,6 @@ r2beta.glmerMod <- function(model, partial=TRUE, method='sgv',
 
   }
 
-  # The weighted adjustment is helpful for binary random variables
-  # It should not be applied to poisson random variables
-
-  if (fam$family == "binomial" & wtdbin == TRUE){
-
-    # Doubly weighted model
-    W_inv_sqr = fit@frame[['(weights)']]^(-1/2)
-    nmrc=sapply(data, is.numeric)
-    data[,nmrc] = W_inv_sqr * data[,nmrc]
-
-    # The weights shouldn't be adjusted,
-    # but other numeric variables should
-    data$wz = data$wz * 1 / W_inv_sqr
-
-    # Fit mixed model to the weighted pseudo outcomes
-    fit_fin = lme4::lmer(stats::as.formula(fit@call[[2]]),
-                         data = data, weights = wz)
-
-  } else {
-    fit_fin = fit
-  }
-
-  return(r2beta(fit_fin, method = method, partial = partial))
+  return(r2beta(model = fit, method = method, partial = partial))
 
 }

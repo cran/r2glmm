@@ -27,14 +27,15 @@
 #' @export
 
 plot.R2 <- function(x,y=NULL,txtsize=10, maxcov=3,
-                    r2labs=NULL, r2mthd='sgv', cor=TRUE,...){
+                    r2labs=NULL, r2mthd='sgv', cor=TRUE,
+                    ...){
 
-  maxcov=maxcov+1
+  maxcov= min(maxcov+1, nrow(x))
   if(is.null(r2labs)) r2labs = c('1','2')
 
   if(toupper(r2mthd)=='SGV'){
-    c1.lab=bquote(paste(R[bar(italic(V))]^{2} ~~ (hat(Sigma)[.(r2labs[1])])))
-    c2.lab=bquote(paste(R[bar(italic(V))]^{2} ~~ (hat(Sigma)[.(r2labs[2])])))
+    c1.lab=bquote(paste(R[Sigma]^{2} ~~ (hat(Sigma)[.(r2labs[1])])))
+    c2.lab=bquote(paste(R[Sigma]^{2} ~~ (hat(Sigma)[.(r2labs[2])])))
     diff.lab = bquote(paste(.(c2.lab)-.(c1.lab)))
   }
 
@@ -67,11 +68,8 @@ plot.R2 <- function(x,y=NULL,txtsize=10, maxcov=3,
       ggplot2::labs(x = 'Fixed Predictor', y = '') +
       ggplot2::ggtitle(lab) + ggplot2::theme_bw() +
       ggplot2::theme(
+        plot.title = ggplot2::element_text(hjust = 1/2),
         panel.border = ggplot2::element_rect(colour = 'white'),
-        axis.title   = ggplot2::element_text(
-          face = "bold.italic", color ="black", size = txtsize),
-        axis.text.x  = ggplot2::element_text(
-          angle=20, vjust=0.5, size=6),
         strip.background = ggplot2::element_rect(
           fill = 'white', colour = 'white'),
         strip.text       = ggplot2::element_text(

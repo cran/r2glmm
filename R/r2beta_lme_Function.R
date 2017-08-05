@@ -2,12 +2,12 @@
 #' @export
 
 r2beta.lme <- function(model, partial=TRUE, method='sgv',
-                       wtdbin = TRUE, data = NULL){
+                       data = NULL){
 
   if(is.null(data)) data = model$data
 
   # Get model matrices
-  X=stats::model.matrix(eval(model$call$fixed)[-2], data = data)
+  X=stats::model.matrix(stats::formula(model), data = data)
 
   # Get number of observations
   n <- nrow(X)
@@ -43,7 +43,9 @@ r2beta.lme <- function(model, partial=TRUE, method='sgv',
     # SGV approach takes the standardized generalized variance of SigHat
     if(toupper(method)=='SGV'){
 
-      SigHat = calc_sgv(nblocks = nclusts, vmat = mlist)
+      SigHat = calc_sgv(nblocks = nclusts,
+                        blksizes = obsperclust,
+                        vmat = mlist)
 
     }
 
@@ -80,6 +82,7 @@ r2beta.lme <- function(model, partial=TRUE, method='sgv',
     lower.CL = stats::qbeta(0.025, R2$v1/2, R2$v2/2, R2$ncp)
     upper.CL = stats::qbeta(0.975, R2$v1/2, R2$v2/2, R2$ncp)
   } )
+
   R2 = R2[order(-R2$Rsq),]
 
   class(R2) <- c('R2', 'data.frame')

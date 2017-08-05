@@ -14,4 +14,3 @@
 \description{
 Print the contents of an R2 object
 }
-

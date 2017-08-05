@@ -107,8 +107,20 @@ calc_sgv <- function(nblocks=NULL, blksizes = NULL, vmat){
 
   # Back transform from log scale after taking mean of log sgvs
   # This gives the geometric mean of the sgv of the blocks
+  # One numerical complication is non-finite sgv values.
 
-  SGV = exp(mean(unlist(sgv)))
+  sgvec = unlist(sgv)
+  keep = is.finite(sgvec)
+
+  if(length(sgvec) - sum(keep) > 0){
+    warning("Some SGV estimates are non-finite and have been adjusted")
+
+    sgvec[!keep] = max(sgvec[keep])
+
+  }
+
+
+  SGV = exp( mean(sgvec) )
 
   return(as.numeric(SGV))
 
@@ -123,7 +135,6 @@ calc_sgv <- function(nblocks=NULL, blksizes = NULL, vmat){
 #' @param data the dataframe containing the variables in the model.
 #' @param niter Maximum number of iterations to perform.
 #' @param verbose if TRUE, iterations are printed to console.
-#' @param wtdbin if TRUE, the binomial weights are used to adjust the final model, which improved covariance model selection. This method is not applied to poisson models.
 #' @return A pseudo linear mixed model of class "lme" .
 #' @seealso \code{\link{glmmPQL}}
 #' @examples
@@ -143,7 +154,7 @@ calc_sgv <- function(nblocks=NULL, blksizes = NULL, vmat){
 #' summary(merPQL)
 #' @export pqlmer
 
-pqlmer <- function(formula, family, data, niter = 40, verbose = T, wtdbin = T){
+pqlmer <- function(formula, family, data, niter = 40, verbose = T){
 
     if (is.character(family))
       family <- get(family, mode = "function", envir = parent.frame())
@@ -193,26 +204,7 @@ pqlmer <- function(formula, family, data, niter = 40, verbose = T, wtdbin = T){
 
   }
 
-  if (wtdbin == TRUE & family$family == "binomial"){
-
-    # Doubly weighted model
-    W_inv_sqr = fit@frame[['(weights)']]^(-1/2)
-    nmrc=sapply(data, is.numeric)
-    data[,nmrc] = W_inv_sqr * data[,nmrc]
-
-    # The weights shouldn't be adjusted,
-    # but other numeric variables should
-    data$wz = data$wz * 1 / W_inv_sqr
-
-    # Fit mixed model to the weighted pseudo outcomes
-    fit_fin = lme4::lmer(stats::as.formula(fit@call[[2]]),
-                         data = data, weights = wz)
-
-  } else {
-    fit_fin = fit
-  }
-
-  return(fit_fin)
+  return(fit)
 
 }
 

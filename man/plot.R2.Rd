@@ -44,4 +44,3 @@ r2 = r2beta(model=lmemod,partial=TRUE,method='sgv')
 
 plot(x=r2)
 }
-

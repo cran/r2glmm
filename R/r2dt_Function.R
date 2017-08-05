@@ -1,11 +1,12 @@
 
 
-#'  R Squared Difference Test (R2DT). Test for a statistically significant difference in genealized explained variance between two candidate models.
+#'  R Squared Difference Test (R2DT). Test for a statistically significant difference in generalized explained variance between two candidate models.
 #'
 #' @param x An R2 object from the r2beta function.
-#' @param y An R2 object from the r2beta function.
+#' @param y An R2 object from the r2beta function. If y is not specified, Ho: E[x] = mu is tested (mu is specified by the user).
+#' @param mu Used to test Ho: E[x] = mu.
 #' @param fancy if TRUE, the output values are rounded and changed to characters.
-#' @param cor if TRUE, the R squared statistics are assumed to be positively correlated and a simulation based approach is used. If FALSE, the R squared are assumed independent and the difference of independent beta distributions is used.
+#' @param cor if TRUE, the R squared statistics are assumed to be positively correlated and a simulation based approach is used. If FALSE, the R squared are assumed independent and the difference of independent beta distributions is used. This only needs to be specified when two R squared measures are being considered.
 #' @param onesided if TRUE, the alternative hypothesis is that one model explains a larger proportion of generalized variance. If false, the alternative is that the amount of generalized variance explained by the two candidate models is not equal.
 #' @param nsims number of samples to draw when simulating correlated non-central beta random variables. This parameter is only relevant if cor=TRUE.
 #' @param clim Desired confidence level for interval estimates regarding the difference in generalized explained variance.
@@ -32,12 +33,17 @@
 #'
 #' @export
 
-r2dt = function(x, y, cor = FALSE, fancy=FALSE,
+r2dt = function(x, y=NULL, cor = TRUE, fancy=FALSE,
                 onesided=TRUE, clim=95,
-                nsims=1000){
+                nsims=2000, mu=NULL){
+  if(!('R2' %in% class(x) ))
+    x = r2beta(x, partial = FALSE)
+  if(!is.null(y) & !('R2'%in%class(y)))
+    y = r2beta(y, partial = FALSE)
 
-    alpha = ifelse(clim>1, 1-clim/100, 1-clim)
-    limits = c(0+alpha/2, 1-alpha/2)
+
+  alpha = ifelse(clim>1, 1-clim/100, 1-clim)
+  limits = c(0+alpha/2, 1-alpha/2)
 
   pbetas <- function (z,a=1,b=1,c=1,d=1,ncp1=0,ncp2=0){
     n=length(z)
@@ -68,92 +74,179 @@ r2dt = function(x, y, cor = FALSE, fancy=FALSE,
     return(tt)
   }
 
-  xx = x[1,]; yy = y[1,]; diff = xx$Rsq - yy$Rsq
+  if(is.null(y)){
 
-  if(cor){
+    # Testing one R squared value against a target
 
-    # It is assumed that there is a positive
-    # correlation between R squared statistics
-    # when they have identical mean models.
+    if(is.null(mu)){
+      stop('Specify mu in order to test E[R^2] = mu')
+    }
 
-    samps = stats::rnorm(nsims, mean = 0.50, sd = 0.08)
-    samps[samps > 0.75] = 0.75
-    samps[samps < 0.25] = 0.25
+    xx = x[1,]
 
-    df = data.frame(
-      r2x = stats::qbeta(samps+stats::rnorm(nsims, sd=0.1),
-                  shape1 = xx$v1/2,
-                  shape2 = xx$v2/2,
-                  ncp    = xx$ncp),
-      r2y = stats::qbeta(samps+stats::rnorm(nsims, sd=0.1),
-                  shape1 = yy$v1/2,
-                  shape2 = yy$v2/2,
-                  ncp    = yy$ncp))
+    alpha  = xx$v1/2
+    beta   = xx$v2/2
+    lambda = xx$ncp
 
-    diffs = df$r2x-df$r2y
-    diffs = diffs[!is.na(diffs)]
+    xvals = seq(0,1, length.out = 10000)
 
-    pval = ifelse(onesided, 1, 2) *
-      mean(sign(stats::median(diffs)) != sign(diffs))
+    repeat{
 
-    ci = as.numeric(stats::quantile(diffs,probs=limits))
+      yvals = stats::dbeta(xvals, alpha, beta, lambda)
 
-  } else {
+      E_r2 = mean(xvals*yvals)
 
-    # Null Distribution
-    # The difference distribution centered on 0
-    # Using the CDF, calculate P(r2diff > observed)
-    # multiply by 2 if test is two sided
+      diff = E_r2-mu
 
-    pval <- ifelse(onesided, 1, 2) *
-      (1 - pbetas(z = abs(diff),
-                  a = xx$v1/2, b = xx$v2/2,
-                  c = xx$v1/2, d = xx$v2/2,
-                  ncp1 = xx$ncp, ncp2 = xx$ncp))
+      if(abs(diff)<0.0001) break
 
-    r2_diff_ci = function(start){
-
-      lower = upper = start
-
-      # Upper confidence limit
-
-      repeat{
-
-        qq = pbetas(z = upper,
-                    a = xx$v1/2, b = xx$v2/2,
-                    c = yy$v1/2, d = yy$v2/2,
-                    ncp1 = xx$ncp, ncp2 = yy$ncp)
-
-        if (qq >= limits[2] | abs(qq-limits[2])<0.01) break
-
-        upper = upper+0.005
-
+      # if mu < E[R^2]
+      if (diff < 0){
+        lambda=lambda*(1+abs(diff))
+      } else {
+        lambda=lambda*(1-diff)
       }
-
-      # Lower confidence limit
-
-      repeat{
-
-        qq = pbetas(z = lower,
-                    a = xx$v1/2, b = xx$v2/2,
-                    c = yy$v1/2, d = yy$v2/2,
-                    ncp1 = xx$ncp, ncp2 = yy$ncp)
-
-        if (qq <= limits[1] | abs(qq-limits[1])<0.01) break
-
-        lower = lower-0.005
-
-      }
-
-      return(c(lower, upper))
 
     }
 
-    ci = r2_diff_ci(start = diff)
+    t = xx$Rsq
+
+    # Ho: E[R^2] = mu vs. Ha: E[R^2] < mu
+    if(t > mu){
+      pval = ifelse(onesided, 1, 2) * (1-stats::pbeta(t, alpha, beta, lambda))
+    } else {
+      pval = ifelse(onesided, 1, 2) * (stats::pbeta(t, alpha, beta, lambda))
+    }
+
+    diff = t-mu
+
+    res = list(d=diff,
+               ci=c(xx[,'lower.CL'], xx[,'upper.CL']) - mu,
+               p=pval)
+
+  } else {
+
+    xx = x[1,]; yy = y[1,]; diff = xx$Rsq - yy$Rsq
+
+    if(cor){
+
+      # It is assumed that there is a positive
+      # correlation between R squared statistics
+      # when they have identical mean models.
+
+      rsq = min(xx$Rsq, yy$Rsq)
+      ncp = min(xx$ncp, yy$ncp)
+
+      beta_cor = 1 - (rsq / (1+rsq))^4
+
+      samples = MASS::mvrnorm(
+        n=nsims,
+        mu = c(0,0),
+        Sigma = matrix(c(1,beta_cor, beta_cor,1),
+                       nrow=2, byrow=TRUE)
+      )
+
+      u = stats::pnorm(samples)
+
+      df = data.frame(
+        r2x = stats::qbeta(u[,1],
+                           shape1 = yy$v1/2,
+                           shape2 = yy$v2/2,
+                           ncp    = ncp),
+        r2y = stats::qbeta(u[,2],
+                           shape1 = yy$v1/2,
+                           shape2 = yy$v2/2,
+                           ncp    = ncp))
+
+      diffs = df$r2x-df$r2y
+      diffs = diffs[!is.na(diffs)]
+
+      if (diff < 0){
+        pval = ifelse(onesided, 1, 2) * mean(diffs < diff)
+      } else {
+        pval = ifelse(onesided, 1, 2) * mean(diffs > diff)
+      }
+
+      #ci
+
+      df = data.frame(
+        r2x = stats::qbeta(u[,1],
+                           shape1 = xx$v1/2,
+                           shape2 = xx$v2/2,
+                           ncp    = xx$ncp),
+        r2y = stats::qbeta(u[,2],
+                           shape1 = yy$v1/2,
+                           shape2 = yy$v2/2,
+                           ncp    = yy$ncp))
+
+      diffs = df$r2x-df$r2y
+      diffs = diffs[!is.na(diffs)]
+
+      ci = as.numeric(stats::quantile(diffs,probs=limits))
+
+    } else {
+
+      # Null Distribution
+      # The difference distribution centered on 0
+      # Using the CDF, calculate P(r2diff > observed)
+      # multiply by 2 if test is two sided
+
+
+      # Find a dominant Rsq
+      dom = eval(parse(
+        text=names(which.max(c(xx = xx[,'Rsq'], yy = yy[,'Rsq'])))))
+
+      pval <- ifelse(onesided, 1, 2) *
+        (1 - pbetas(z = abs(diff),
+                    a = dom$v1/2, b = dom$v2/2,
+                    c = dom$v1/2, d = dom$v2/2,
+                    ncp1 = dom$ncp, ncp2 = dom$ncp))
+
+      r2_diff_ci = function(start){
+
+        lower = upper = start
+
+        # Upper confidence limit
+
+        repeat{
+
+          qq = pbetas(z = upper,
+                      a = xx$v1/2, b = xx$v2/2,
+                      c = yy$v1/2, d = yy$v2/2,
+                      ncp1 = xx$ncp, ncp2 = yy$ncp)
+
+          if (qq >= limits[2] | abs(qq-limits[2])<0.0001) break
+
+          upper = upper+0.005
+
+        }
+
+        # Lower confidence limit
+
+        repeat{
+
+          qq = pbetas(z = lower,
+                      a = xx$v1/2, b = xx$v2/2,
+                      c = yy$v1/2, d = yy$v2/2,
+                      ncp1 = xx$ncp, ncp2 = yy$ncp)
+
+          if (qq <= limits[1] | abs(qq-limits[1])<0.0001) break
+
+          lower = lower-0.005
+
+        }
+
+        return(c(lower, upper))
+
+      }
+
+      ci = r2_diff_ci(start = diff)
+
+    }
+
+    res = list(d=diff, ci=ci,p=pval)
 
   }
-
-  res = list(d=diff, ci=ci,p=pval)
 
   if (fancy == T){
 
@@ -207,6 +300,7 @@ r2dt = function(x, y, cor = FALSE, fancy=FALSE,
     res$ci = make.ci(diff, upper = res$ci[2], lower=res$ci[1])
 
   }
+
 
   return(res)
 

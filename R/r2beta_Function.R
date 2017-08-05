@@ -1,6 +1,6 @@
 
 #------------------------------------------------------------------------------#
-#' r2beta
+#' r2beta Compute R Squared for Mixed Models
 #'
 #' @description Computes coefficient of determination (R squared) from
 #' edwards et al., 2008 and the generalized R squared from Jaeger et al., 2016.
@@ -26,9 +26,6 @@
 #'            linear model is computed. This method should only be used
 #'            on glm and lm object.
 #'
-#' @param wtdbin if TRUE, the binomial weights are used to adjust the final
-#'          model, which improved covariance model selection. This method is
-#'          not applied to poisson models.
 #'
 #' @param data The data used by the fitted model. This argument is required
 #'        for models with special expressions in their formula, such as
@@ -98,7 +95,7 @@
 #------------------------------------------------------------------------------#
 
 r2beta <- function(model, partial=TRUE, method='sgv',
-                   wtdbin = TRUE, data = NULL){
+                   data = NULL){
   UseMethod('r2beta')
 }
 

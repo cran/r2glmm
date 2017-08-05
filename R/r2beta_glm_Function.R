@@ -2,7 +2,7 @@
 #' @export
 
 r2beta.glm <- function(model, partial=TRUE, method='sgv',
-                       wtdbin = TRUE, data = NULL){
+                       data = NULL){
 
   mod.pql = glmPQL(model)
 

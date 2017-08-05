@@ -2,10 +2,9 @@
 % Please edit documentation in R/r2beta_Function.R
 \name{r2beta}
 \alias{r2beta}
-\title{r2beta}
+\title{r2beta Compute R Squared for Mixed Models}
 \usage{
-r2beta(model, partial = TRUE, method = "sgv", wtdbin = TRUE,
-  data = NULL)
+r2beta(model, partial = TRUE, method = "sgv", data = NULL)
 }
 \arguments{
 \item{model}{a fitted mermod, lme, or glmmPQL model.}
@@ -25,10 +24,6 @@ is applied. This option is available for
 if \code{method} = 'lm', the classical R squared from the
 linear model is computed. This method should only be used
 on glm and lm object.}
-
-\item{wtdbin}{if TRUE, the binomial weights are used to adjust the final
-model, which improved covariance model selection. This method is
-not applied to poisson models.}
 
 \item{data}{The data used by the fitted model. This argument is required
 for models with special expressions in their formula, such as
@@ -103,4 +98,3 @@ Nakagawa, Shinichi, and Holger Schielzeth. "A general and simple method for
 Jaeger, Byron C., et al., "An R Squared Statistic for Fixed Effects in the
    Generalized Linear Mixed Model." Journal of Applied Statistics (2016).
 }
-

@@ -2,7 +2,7 @@
 #' @export
 
 r2beta.lm <- function(model, partial=TRUE, method='sgv',
-                      wtdbin = TRUE, data = NULL){
+                      data = NULL){
 
     beta = stats::coef(model)
     p = length(beta)
@@ -26,7 +26,8 @@ r2beta.lm <- function(model, partial=TRUE, method='sgv',
     }
 
     # Compute the specified R2
-    r2=lapply(C, FUN=cmp_R2, x=X, SigHat=SigHat, beta=beta, method='lm')
+    r2=lapply(C, FUN=cmp_R2, x=X, SigHat=SigHat,
+              beta=beta, method='lm')
 
     # initialize a dataframe to hold results
     R2 = data.frame(Effect = names(r2))

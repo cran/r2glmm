@@ -4,7 +4,7 @@
 \alias{pqlmer}
 \title{pqlmer}
 \usage{
-pqlmer(formula, family, data, niter = 40, verbose = T, wtdbin = T)
+pqlmer(formula, family, data, niter = 40, verbose = T)
 }
 \arguments{
 \item{formula}{The lme4 model formula.}
@@ -16,8 +16,6 @@ pqlmer(formula, family, data, niter = 40, verbose = T, wtdbin = T)
 \item{niter}{Maximum number of iterations to perform.}
 
 \item{verbose}{if TRUE, iterations are printed to console.}
-
-\item{wtdbin}{if TRUE, the binomial weights are used to adjust the final model, which improved covariance model selection. This method is not applied to poisson models.}
 }
 \value{
 A pseudo linear mixed model of class "lme" .
@@ -44,4 +42,3 @@ summary(merPQL)
 \seealso{
 \code{\link{glmmPQL}}
 }
-

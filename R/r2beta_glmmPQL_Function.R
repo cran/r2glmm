@@ -2,34 +2,9 @@
 #' @export
 
 r2beta.glmmPQL <- function(model, partial=TRUE, method='sgv',
-                           wtdbin = TRUE, data = NULL){
+                           data = NULL){
 
   if(is.null(data)) data = model$data
-
-  # fam = model$family
-  #
-  # if (fam$family == "binomial" & wtdbin == TRUE){
-  #
-  #   # Doubly weighted model
-  #   W_inv_sqr = model$data$invwt^{1/2}
-  #   nmrc=sapply(data, is.numeric)
-  #   data[,nmrc] = W_inv_sqr * data[,nmrc]
-  #
-  #   # The weights shouldn't be adjusted,
-  #   # but other numeric variables should
-  #   data$invwt = data$invwt / W_inv_sqr
-  #
-  #   # Fit mixed model to the weighted pseudo outcomes
-  #
-  #   model$call[[1]]<-quote(nlme::lme)
-  #   model$call[['family']]=NULL
-  #   model$call[['verbose']]=NULL
-  #
-  #   model = update(model, fixed = zz~., data = data,
-  #                    weights = nlme::varFixed(~invwt))
-  #
-  # }
-
 
   # Get model matrices
   X=stats::model.matrix(eval(model$call$fixed)[-2],
